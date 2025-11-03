@@ -43,31 +43,28 @@ contract HelperConfig is Script, CodeConstants {
     }
 
     function getSepoliaEthConfig() public pure returns (NetworkConfig memory) {
-        return
-            NetworkConfig({
-                entranceFee: 0.01 ether,
-                interval: 30,
-                vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B,
-                gasLane: 0x8472ba59cf7134dfe321f4d61a430c4857e8b19cdd5230b09952a92671c24409,
-                callbackGasLimit: 500000,
-                subscriptionId: 102053843200778523366836749579478547302215874105400546087423456780767954194919,
-                link: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
-                account: 0xbd187E110DBFc7Fdf9cCaF42786015b4160Ae3f2
-            });
+        return NetworkConfig({
+            entranceFee: 0.01 ether,
+            interval: 30,
+            vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B,
+            gasLane: 0x8472ba59cf7134dfe321f4d61a430c4857e8b19cdd5230b09952a92671c24409,
+            callbackGasLimit: 500000,
+            subscriptionId: 102053843200778523366836749579478547302215874105400546087423456780767954194919,
+            link: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
+            account: 0xbd187E110DBFc7Fdf9cCaF42786015b4160Ae3f2
+        });
     }
 
     function getOrCreateAnvilEthConfig() public returns (NetworkConfig memory) {
         // Check if we set an active network config
-        if (localNetworkConfig.vrfCoordinator != address(0))
+        if (localNetworkConfig.vrfCoordinator != address(0)) {
             return localNetworkConfig;
+        }
 
         // Deploy mock
         vm.startBroadcast();
-        VRFCoordinatorV2_5Mock vrfCoordinatorV2_5Mock = new VRFCoordinatorV2_5Mock(
-                MOCK_BASE_FEE,
-                MOCK_GAS_PRICE_LINK,
-                MOCK_WEI_PER_UINT_LINK
-            );
+        VRFCoordinatorV2_5Mock vrfCoordinatorV2_5Mock =
+            new VRFCoordinatorV2_5Mock(MOCK_BASE_FEE, MOCK_GAS_PRICE_LINK, MOCK_WEI_PER_UINT_LINK);
         LinkToken linkToken = new LinkToken();
 
         vm.stopBroadcast();
@@ -86,9 +83,7 @@ contract HelperConfig is Script, CodeConstants {
         return localNetworkConfig;
     }
 
-    function getConfigByChain(
-        uint256 chainId
-    ) public returns (NetworkConfig memory) {
+    function getConfigByChain(uint256 chainId) public returns (NetworkConfig memory) {
         if (networkConfigs[chainId].vrfCoordinator != address(0)) {
             return networkConfigs[chainId];
         } else if (chainId == LOCAL_CHAIN_ID) {

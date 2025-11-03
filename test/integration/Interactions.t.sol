@@ -21,75 +21,48 @@ contract InteractionsTest is Test, CodeConstants {
     }
 
     function testCreateSubscriptionUsingConfigFetchesCorrectParams() public {
-        (uint256 subscriptionId, address vrfCoordinator) = createSubscription
-            .createSubscriptionUsingConfig();
+        (uint256 subscriptionId, address vrfCoordinator) = createSubscription.createSubscriptionUsingConfig();
 
-        HelperConfig.NetworkConfig memory config = helperConfig
-            .getConfigByChain(block.chainid);
+        HelperConfig.NetworkConfig memory config = helperConfig.getConfigByChain(block.chainid);
 
-        assertEq(
-            vrfCoordinator,
-            config.vrfCoordinator,
-            "VRF Coordinator mismatch"
-        );
+        assertEq(vrfCoordinator, config.vrfCoordinator, "VRF Coordinator mismatch");
         assertGt(subscriptionId, 0, "Subscription ID should be greater than 0");
     }
 
     function testCreateSubscriptionRevertsWithInvalidCoordinator() public {
         // Arrange
         address invalidVrfCoordinator = address(0);
-        HelperConfig.NetworkConfig memory config = helperConfig
-            .getConfigByChain(block.chainid);
+        HelperConfig.NetworkConfig memory config = helperConfig.getConfigByChain(block.chainid);
 
         // Act & Assert
         vm.expectRevert();
-        createSubscription.createSubscription(
-            invalidVrfCoordinator,
-            config.account
-        );
+        createSubscription.createSubscription(invalidVrfCoordinator, config.account);
     }
 
     function testAddConsumerUsingConfig() public {
-        (uint256 subscriptionId, address vrfCoordinator) = createSubscription
-            .createSubscriptionUsingConfig();
+        (uint256 subscriptionId, address vrfCoordinator) = createSubscription.createSubscriptionUsingConfig();
 
         address owner = helperConfig.getConfigByChain(block.chainid).account;
         address consumer = address(this);
-        addConsumer.addConsumer(
-            consumer,
-            vrfCoordinator,
-            subscriptionId,
-            owner
-        );
+        addConsumer.addConsumer(consumer, vrfCoordinator, subscriptionId, owner);
     }
 
     function testAddConsumerRevertsWhenExceedingMaxConsumers() public {
         // Step 1: Create a subscription
-        (uint256 subscriptionId, address vrfCoordinator) = createSubscription
-            .createSubscriptionUsingConfig();
+        (uint256 subscriptionId, address vrfCoordinator) = createSubscription.createSubscriptionUsingConfig();
 
         address owner = helperConfig.getConfigByChain(block.chainid).account;
 
         // Step 2: Add consumers up to the MAX_CONSUMERS limit
         for (uint256 i = 0; i < 100; i++) {
             address consumer = address(uint160(i + 1)); // Generate unique consumer addresses
-            addConsumer.addConsumer(
-                consumer,
-                vrfCoordinator,
-                subscriptionId,
-                owner
-            );
+            addConsumer.addConsumer(consumer, vrfCoordinator, subscriptionId, owner);
         }
 
         // Step 3: Attempt to add one more consumer and expect a revert
         address extraConsumer = address(0xDEADBEEF); // An additional consumer
         vm.expectRevert(abi.encodeWithSignature("TooManyConsumers()"));
-        addConsumer.addConsumer(
-            extraConsumer,
-            vrfCoordinator,
-            subscriptionId,
-            owner
-        );
+        addConsumer.addConsumer(extraConsumer, vrfCoordinator, subscriptionId, owner);
     }
 
     function testFundSubscriptionRevertsIfSubscriptionIdIs0() public {
@@ -98,39 +71,21 @@ contract InteractionsTest is Test, CodeConstants {
     }
 
     function testFundScriptionUsingConfigFundsCorrectly() public {
-        (uint256 subscriptionId, address vrfCoordinator) = createSubscription
-            .createSubscriptionUsingConfig();
+        (uint256 subscriptionId, address vrfCoordinator) = createSubscription.createSubscriptionUsingConfig();
 
         address owner = helperConfig.getConfigByChain(block.chainid).account;
         address consumer = address(this);
-        addConsumer.addConsumer(
-            consumer,
-            vrfCoordinator,
-            subscriptionId,
-            owner
-        );
+        addConsumer.addConsumer(consumer, vrfCoordinator, subscriptionId, owner);
 
-        HelperConfig.NetworkConfig memory config = helperConfig
-            .getConfigByChain(block.chainid);
+        HelperConfig.NetworkConfig memory config = helperConfig.getConfigByChain(block.chainid);
 
-        fundSubscription.fundSubscription(
-            vrfCoordinator,
-            subscriptionId,
-            config.link,
-            owner
-        );
+        fundSubscription.fundSubscription(vrfCoordinator, subscriptionId, config.link, owner);
 
-        uint256 expectedAmountFunded = (block.chainid == LOCAL_CHAIN_ID)
-            ? fundSubscription.FUND_AMOUNT() * 100
-            : fundSubscription.FUND_AMOUNT();
+        uint256 expectedAmountFunded =
+            (block.chainid == LOCAL_CHAIN_ID) ? fundSubscription.FUND_AMOUNT() * 100 : fundSubscription.FUND_AMOUNT();
 
-        (uint96 balance, , , , ) = VRFCoordinatorV2_5Mock(vrfCoordinator)
-            .getSubscription(subscriptionId);
+        (uint96 balance,,,,) = VRFCoordinatorV2_5Mock(vrfCoordinator).getSubscription(subscriptionId);
 
-        assertEq(
-            balance,
-            expectedAmountFunded,
-            "Subscription balance does not match the funded amount"
-        );
+        assertEq(balance, expectedAmountFunded, "Subscription balance does not match the funded amount");
     }
 }
