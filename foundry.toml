@@ -16,8 +16,4 @@ runs = 256
 
 solc_version = "0.8.19"
 
-[profile.ci]
-sizes = true
-ignored_contracts = ["VRFCoordinatorV2_5Mock"]
-
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
